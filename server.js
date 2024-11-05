@@ -29,6 +29,7 @@ app.post('/url', (req, res) => {
             isUrlPresent = !!urlMap.get(shortUrl);
         }
         urlMap.set(shortUrl,url);
+        analyticMap.set(shortUrl,0);
         return res.json({
             type:"success",
             shortUrl : `http://localhost:3000/${shortUrl}`
@@ -48,9 +49,11 @@ app.get('/:id', (req, res) => {
     try{
         const originalUrl = urlMap.get(shortUrl);
         if(originalUrl){
-            return res.redirect(originalUrl);
-            const count = analyticMap.get(shortUrl);
+            res.redirect(originalUrl);
+            let count = analyticMap.get(shortUrl);
             analyticMap.set(shortUrl,count+1);
+            console.log(analyticMap);
+            return;
         }
         
         return res.json({
@@ -67,7 +70,27 @@ app.get('/:id', (req, res) => {
 })
 
 app.get('/url/analytics/:id', (req, res) => {
-
+    const shortUrl = req.params.id;
+    try{
+        const isDataAvailable = analyticMap.get(shortUrl);
+        if(isDataAvailable || isDataAvailable == 0){
+            const count = analyticMap.get(shortUrl);
+            return res.json({
+                type:"success",
+                message:`Site has been visited ${count} times`
+            })
+        }
+        return res.json({
+            type:"error",
+            message:"Invalid Url"
+        })
+    } catch(e){
+        return res.json({
+            type:"error",
+            message:"Some error occurred",
+            error:e.message
+        })
+    }
 })
 
 app.listen(3000, () => {
